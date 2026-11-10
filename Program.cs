@@ -3,6 +3,7 @@ using PruebaTecnica.Application;
 using PruebaTecnica.Common.Exceptions;
 using PruebaTecnica.Common.Middleware;
 using PruebaTecnica.Common.OpenApi;
+using PruebaTecnica.Endpoints;
 using PruebaTecnica.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +29,8 @@ using (var scope = app.Services.CreateScope())
 
 app.UseExceptionHandler();
 app.UseMiddleware<ApiKeyMiddleware>();
+
+app.MapUserEndpoints();
 
 app.MapOpenApi();
 app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "PruebaTecnica v1"));

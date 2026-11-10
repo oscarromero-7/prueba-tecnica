@@ -11,6 +11,7 @@ public class GlobalExceptionHandler(IProblemDetailsService problemDetailsService
         {
             NotFoundException => (StatusCodes.Status404NotFound, "Recurso no encontrado"),
             ConflictException => (StatusCodes.Status409Conflict, "Conflicto"),
+            BadHttpRequestException badRequest => (badRequest.StatusCode, "Request inválido"),
             _ => (0, string.Empty)
         };
 
