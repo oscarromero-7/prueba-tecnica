@@ -1,0 +1,220 @@
+@baseUrl = http://localhost:5201
+@apiKey = prueba-tecnica-api-key-123
+
+# Los ids de ejemplo (1) asumen una base recién creada. Ajustarlos si ya hay datos.
+
+### ---------- Públicos (sin API Key) ----------
+
+### Health check
+GET {{baseUrl}}/health
+
+### Documento OpenAPI
+GET {{baseUrl}}/openapi/v1.json
+
+### Sin API Key -> 401
+GET {{baseUrl}}/users
+
+### ---------- Users ----------
+
+### Crear usuario (body del enunciado) -> 201
+POST {{baseUrl}}/users
+X-API-KEY: {{apiKey}}
+Content-Type: application/json
+
+{
+  "name": "Juan",
+  "email": "juan@test.com"
+}
+
+### Crear usuario con password (opcional, se guarda hasheado) -> 201
+POST {{baseUrl}}/users
+X-API-KEY: {{apiKey}}
+Content-Type: application/json
+
+{
+  "name": "Ana",
+  "email": "ana@test.com",
+  "password": "secreta123"
+}
+
+### Crear usuario inválido -> 400
+POST {{baseUrl}}/users
+X-API-KEY: {{apiKey}}
+Content-Type: application/json
+
+{
+  "name": "",
+  "email": "no-es-un-email"
+}
+
+### Email duplicado (no distingue mayúsculas) -> 409
+POST {{baseUrl}}/users
+X-API-KEY: {{apiKey}}
+Content-Type: application/json
+
+{
+  "name": "Otro Juan",
+  "email": "JUAN@test.com"
+}
+
+### Listar usuarios
+GET {{baseUrl}}/users
+X-API-KEY: {{apiKey}}
+
+### Listar usuarios activos
+GET {{baseUrl}}/users?isActive=true
+X-API-KEY: {{apiKey}}
+
+### Listar usuarios inactivos
+GET {{baseUrl}}/users?isActive=false
+X-API-KEY: {{apiKey}}
+
+### Obtener usuario por id
+GET {{baseUrl}}/users/1
+X-API-KEY: {{apiKey}}
+
+### Obtener usuario inexistente -> 404
+GET {{baseUrl}}/users/999
+X-API-KEY: {{apiKey}}
+
+### Modificar usuario (name, email, isActive son obligatorios)
+PUT {{baseUrl}}/users/1
+X-API-KEY: {{apiKey}}
+Content-Type: application/json
+
+{
+  "name": "Juan Pérez",
+  "email": "juan@test.com",
+  "isActive": false
+}
+
+### Modificar usuario con el email de otro -> 409
+PUT {{baseUrl}}/users/1
+X-API-KEY: {{apiKey}}
+Content-Type: application/json
+
+{
+  "name": "Juan",
+  "email": "ana@test.com",
+  "isActive": true
+}
+
+### ---------- Addresses ----------
+
+### Crear dirección para un usuario -> 201
+POST {{baseUrl}}/users/1/addresses
+X-API-KEY: {{apiKey}}
+Content-Type: application/json
+
+{
+  "street": "Calle Falsa 123",
+  "city": "Asunción",
+  "country": "Paraguay",
+  "zipCode": "9999"
+}
+
+### Crear dirección para usuario inexistente -> 404
+POST {{baseUrl}}/users/999/addresses
+X-API-KEY: {{apiKey}}
+Content-Type: application/json
+
+{
+  "street": "Calle Falsa 123",
+  "city": "Asunción",
+  "country": "Paraguay"
+}
+
+### Listar direcciones de un usuario
+GET {{baseUrl}}/users/1/addresses
+X-API-KEY: {{apiKey}}
+
+### Obtener dirección por id
+GET {{baseUrl}}/addresses/1
+X-API-KEY: {{apiKey}}
+
+### Modificar dirección
+PUT {{baseUrl}}/addresses/1
+X-API-KEY: {{apiKey}}
+Content-Type: application/json
+
+{
+  "street": "Av. Mariscal López 456",
+  "city": "Asunción",
+  "country": "Paraguay",
+  "zipCode": "1209"
+}
+
+### Eliminar dirección -> 204
+DELETE {{baseUrl}}/addresses/1
+X-API-KEY: {{apiKey}}
+
+### ---------- Currencies ----------
+
+### Listar monedas (incluye las semilla: PYG, USD, EUR, BRL)
+GET {{baseUrl}}/currencies
+X-API-KEY: {{apiKey}}
+
+### Obtener moneda por código
+GET {{baseUrl}}/currencies/usd
+X-API-KEY: {{apiKey}}
+
+### Crear moneda (el código se guarda en mayúsculas) -> 201
+POST {{baseUrl}}/currencies
+X-API-KEY: {{apiKey}}
+Content-Type: application/json
+
+{
+  "code": "ars",
+  "name": "Peso argentino",
+  "rateToBase": 7.5
+}
+
+### Crear moneda duplicada -> 409
+POST {{baseUrl}}/currencies
+X-API-KEY: {{apiKey}}
+Content-Type: application/json
+
+{
+  "code": "USD",
+  "name": "Dólar",
+  "rateToBase": 7300
+}
+
+### Convertir 100 USD a PYG -> 730000
+POST {{baseUrl}}/currency/convert
+X-API-KEY: {{apiKey}}
+Content-Type: application/json
+
+{
+  "fromCurrencyCode": "USD",
+  "toCurrencyCode": "PYG",
+  "amount": 100
+}
+
+### Convertir 100 EUR a BRL
+POST {{baseUrl}}/currency/convert
+X-API-KEY: {{apiKey}}
+Content-Type: application/json
+
+{
+  "fromCurrencyCode": "EUR",
+  "toCurrencyCode": "BRL",
+  "amount": 100
+}
+
+### Convertir con moneda inexistente -> 404
+POST {{baseUrl}}/currency/convert
+X-API-KEY: {{apiKey}}
+Content-Type: application/json
+
+{
+  "fromCurrencyCode": "XXX",
+  "toCurrencyCode": "PYG",
+  "amount": 100
+}
+
+### ---------- Limpieza ----------
+
+### Eliminar usuario (borra sus direcciones en cascada) -> 204
+DELETE {{baseUrl}}/users/1
+X-API-KEY: {{apiKey}}
