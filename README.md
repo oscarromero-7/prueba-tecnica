@@ -119,11 +119,9 @@ de error. Se puede ejecutar desde VS Code (extensión REST Client), Visual Studi
 | DELETE | `/users/{id}` | Eliminar usuario y sus direcciones | 204, 404 |
 | POST | `/users/{userId}/addresses` | Crear dirección | 201, 400, 404 |
 | GET | `/users/{userId}/addresses` | Listar direcciones del usuario | 200, 404 |
-| GET | `/addresses/{id}` | Obtener dirección *(extra)* | 200, 404 |
 | PUT | `/addresses/{id}` | Modificar dirección | 200, 400, 404 |
 | DELETE | `/addresses/{id}` | Eliminar dirección | 204, 404 |
 | GET | `/currencies` | Listar monedas | 200 |
-| GET | `/currencies/{code}` | Obtener moneda *(extra)* | 200, 404 |
 | POST | `/currencies` | Crear moneda | 201, 400, 409 |
 | POST | `/currency/convert` | Convertir un monto entre monedas | 200, 400, 404 |
 | GET | `/health` | Estado de la API y de la BD *(extra, público)* | 200, 503 |
@@ -138,7 +136,7 @@ Todos los errores se devuelven como **ProblemDetails** (RFC 9110). Los de valida
   "status": 400,
   "errors": {
     "Name": ["'Name' no debería estar vacío."],
-    "Email": ["'Email' no es una dirección de correo electrónico válida."]
+    "Email": ["'Email' no tiene un formato válido."]
   }
 }
 ```
@@ -162,13 +160,14 @@ El workflow de **GitHub Actions** (`.github/workflows/ci.yml`) compila y corre l
 Application/
   Users/            Commands/ (Create, Update, Delete) · Queries/ (GetUsers, GetUserById) · UserResponse
   Addresses/        Commands/ · Queries/ · AddressResponse
-  Currencies/       Commands/ (CreateCurrency) · Queries/ (GetCurrencies, GetCurrencyByCode)
+  Currencies/       Commands/ (CreateCurrency) · Queries/ (GetCurrencies)
   CurrencyConversion/  ConvertCurrency
   DependencyInjection.cs   registro de validadores y handlers
 Common/
   Cqrs/             ICommandHandler, IQueryHandler
   Validation/       ValidationFilter<T> (FluentValidation para Minimal API)
   Middleware/       ApiKeyMiddleware
+  Json/             serialización de fechas en la zona horaria configurada
   Exceptions/       NotFound / Conflict + GlobalExceptionHandler
   OpenApi/          esquema de seguridad de la API Key para Swagger
 Domain/             User, Address, Currency, IAuditable
@@ -188,6 +187,8 @@ Los endpoints reciben el handler por inyección y lo invocan directamente.
 **Validación con un endpoint filter.** `AddFluentValidationAutoValidation()` no funciona en Minimal API, por lo que
 `ValidationFilter<T>` ejecuta el validador del body y devuelve `400` con `Results.ValidationProblem(...)`.
 Se aplica con `.WithValidation<T>()`. Los largos máximos se validan acá porque SQLite no los hace cumplir.
+Para el email se usa una regla propia (`ValidEmail`), porque `EmailAddress()` de FluentValidation solo exige un `@`
+y acepta valores como `juan@test` o `juan perez@test.com`.
 
 **Errores de negocio con excepciones.** Los handlers lanzan `NotFoundException` o `ConflictException`, y un
 `IExceptionHandler` global las convierte en 404 o 409 con ProblemDetails. Una alternativa válida es un tipo
@@ -199,12 +200,15 @@ Se aplica con `.WithValidation<T>()`. Los largos máximos se validan acá porque
   en la BD.
 - Si dos requests simultáneos pasan la validación, el índice frena al segundo y también se responde 409.
 
-**Password opcional.** El ejemplo del enunciado para `POST /users` no incluye password, así que es opcional. Si se
-envía, se guarda hasheado con `PasswordHasher<User>` de ASP.NET Core Identity (PBKDF2 con salt). Las respuestas usan
-DTOs, por lo que nunca se devuelve el password ni el hash.
+**Password.** El modelo de datos del enunciado incluye `Password (hasheado)` en la tabla Users, pero el body de
+`POST /users` que da como ejemplo es solo `{ "name", "email" }`. Se respetó ese body: la API no recibe password y la
+columna `PasswordHash` existe en la tabla pero queda en `NULL`. Si se agregara, tendría que guardarse hasheada
+(por ejemplo con `PasswordHasher<User>` de ASP.NET Core Identity) y nunca devolverse: las respuestas usan DTOs.
 
-**`PUT /users/{id}` exige `isActive`.** Si fuera un `bool` común, omitirlo lo dejaría en `false` y desactivaría
-al usuario sin que nadie lo pidiera.
+**`PUT /users/{id}` reemplaza el recurso completo.** Siguiendo la semántica de HTTP, el PUT exige `name`, `email` e
+`isActive`. Un body con solo `{ "isActive": false }` devuelve 400 indicando los campos que faltan. Además, si
+`isActive` fuera un `bool` común, omitirlo lo dejaría en `false` y desactivaría al usuario sin que nadie lo pidiera.
+Para cambios parciales, lo correcto sería agregar un `PATCH /users/{id}` en lugar de flexibilizar el PUT.
 
 **Borrado de usuario: físico y en cascada.** Al eliminar un usuario se eliminan sus direcciones mediante
 `ON DELETE CASCADE` en la FK. Se eligió sobre un soft delete por simplicidad y porque el enunciado pide "eliminar".
@@ -224,13 +228,22 @@ pero SQLite no puede ordenar ni comparar ese valor como número. Por eso las con
 se muestran como `1300.0` y las creadas por la API como `7.5`. El valor numérico es el mismo.
 
 **Auditoría.** Las tres tablas tienen `CreatedAt` y `UpdatedAt`, completados por un `SaveChangesInterceptor`, así
-ningún handler tiene que acordarse de hacerlo. Las fechas se guardan y devuelven en UTC. La hora se obtiene de
-`TimeProvider`, que en los tests se reemplaza por uno falso.
+ningún handler tiene que acordarse de hacerlo. `UpdatedAt` solo cambia si el registro realmente se modificó. La hora
+se obtiene de `TimeProvider`, que en los tests se reemplaza por uno falso.
 
-**Endpoints extra.** Se agregaron tres endpoints que el enunciado no pide:
-- `GET /addresses/{id}` y `GET /currencies/{code}`, para que el header `Location` del `201 Created` apunte a un
-  recurso que realmente existe.
-- `GET /health`, como chequeo de estado para monitoreo.
+**Fechas en hora de Paraguay.** En la BD todas las fechas se guardan en **UTC**. Solo al serializar la respuesta se
+expresan en la zona `America/Asuncion` (UTC-3) con su desfase, por ejemplo `"2026-11-10T11:47:31-03:00"`: es el mismo
+instante que `14:47:31Z`. La zona se configura con `TimeZoneId` en `appsettings.json`. Se usa la zona IANA y no un
+`-3` fijo, para que un cambio de huso horario se resuelva actualizando el sistema operativo.
+
+**Rutas solo las del enunciado.** No se agregaron endpoints de consulta individual (`GET /addresses/{id}`,
+`GET /currencies/{code}`). El header `Location` del `201 Created` apunta a la URI propia del recurso creado
+(`/addresses/{id}`, donde están su PUT y DELETE, y `/currencies/{code}`). El único endpoint extra es `GET /health`,
+un chequeo de estado para monitoreo.
+
+**Sin paginación.** El enunciado pide que `GET /users` devuelva todos los usuarios, por eso no se pagina. Como mejora,
+se agregaría paginación opcional (`?page=&pageSize=`, sin parámetros devuelve todo) manteniendo la respuesta como
+array y el total en un header `X-Total-Count`. `GET /currencies` no la necesita: es un catálogo acotado.
 
 **Simplificaciones propias de una prueba técnica.** En producción se harían de otra forma:
 - La API Key está en `appsettings.json`. En producción iría en una variable de entorno o un gestor de secretos.
@@ -258,7 +271,8 @@ ningún handler tiene que acordarse de hacerlo. Las fechas se guardan y devuelve
 
 **No implementado** (fuera del alcance pedido; posibles mejoras):
 
-- Paginación en los listados
+- Paginación opcional en `GET /users` (ver "Sin paginación")
+- `PATCH /users/{id}` para cambios parciales
 - Concurrencia optimista (token de versión) para evitar que dos PUT simultáneos se pisen
 - Rate limiting
 - Autenticación por usuario (JWT); hoy la API Key es compartida

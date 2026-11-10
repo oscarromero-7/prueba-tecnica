@@ -26,15 +26,14 @@ Content-Type: application/json
   "email": "juan@test.com"
 }
 
-### Crear usuario con password (opcional, se guarda hasheado) -> 201
+### Crear segundo usuario -> 201
 POST {{baseUrl}}/users
 X-API-KEY: {{apiKey}}
 Content-Type: application/json
 
 {
   "name": "Ana",
-  "email": "ana@test.com",
-  "password": "secreta123"
+  "email": "ana@test.com"
 }
 
 ### Crear usuario inválido -> 400
@@ -77,7 +76,7 @@ X-API-KEY: {{apiKey}}
 GET {{baseUrl}}/users/999
 X-API-KEY: {{apiKey}}
 
-### Modificar usuario (name, email, isActive son obligatorios)
+### Modificar usuario: PUT reemplaza el recurso, name, email e isActive son obligatorios
 PUT {{baseUrl}}/users/1
 X-API-KEY: {{apiKey}}
 Content-Type: application/json
@@ -86,6 +85,15 @@ Content-Type: application/json
   "name": "Juan Pérez",
   "email": "juan@test.com",
   "isActive": false
+}
+
+### PUT incompleto (solo isActive) -> 400 indicando name y email
+PUT {{baseUrl}}/users/1
+X-API-KEY: {{apiKey}}
+Content-Type: application/json
+
+{
+  "isActive": true
 }
 
 ### Modificar usuario con el email de otro -> 409
@@ -128,10 +136,6 @@ Content-Type: application/json
 GET {{baseUrl}}/users/1/addresses
 X-API-KEY: {{apiKey}}
 
-### Obtener dirección por id
-GET {{baseUrl}}/addresses/1
-X-API-KEY: {{apiKey}}
-
 ### Modificar dirección
 PUT {{baseUrl}}/addresses/1
 X-API-KEY: {{apiKey}}
@@ -152,10 +156,6 @@ X-API-KEY: {{apiKey}}
 
 ### Listar monedas (incluye las semilla: PYG, USD, EUR, BRL)
 GET {{baseUrl}}/currencies
-X-API-KEY: {{apiKey}}
-
-### Obtener moneda por código
-GET {{baseUrl}}/currencies/usd
 X-API-KEY: {{apiKey}}
 
 ### Crear moneda (el código se guarda en mayúsculas) -> 201

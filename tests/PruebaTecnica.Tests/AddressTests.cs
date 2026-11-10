@@ -80,8 +80,9 @@ public class AddressTests(ApiFactory factory) : IClassFixture<ApiFactory>
             .Content.ReadFromJsonAsync<AddressResponse>();
 
         await _client.DeleteAsync($"/users/{user.Id}");
-        var response = await _client.GetAsync($"/addresses/{address!.Id}");
+        var response = await _client.DeleteAsync($"/addresses/{address!.Id}");
 
+        // Si la dirección hubiera sobrevivido, este DELETE devolvería 204.
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 }

@@ -1,5 +1,4 @@
 using FluentValidation;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PruebaTecnica.Common.Cqrs;
 using PruebaTecnica.Common.Exceptions;
@@ -8,8 +7,8 @@ using PruebaTecnica.Infrastructure;
 
 namespace PruebaTecnica.Application.Users.Commands;
 
-// "= null" marca Password como opcional también en el documento OpenAPI.
-public record CreateUserCommand(string Name, string Email, string? Password = null);
+// Body exacto del enunciado: { "name", "email" }.
+public record CreateUserCommand(string Name, string Email);
 
 public class CreateUserValidator : AbstractValidator<CreateUserCommand>
 {
@@ -17,12 +16,10 @@ public class CreateUserValidator : AbstractValidator<CreateUserCommand>
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Email).ValidEmail();
-        RuleFor(x => x.Password).MinimumLength(6).MaximumLength(100).When(x => x.Password is not null);
     }
 }
 
-public class CreateUserHandler(AppDbContext db, IPasswordHasher<User> passwordHasher)
-    : ICommandHandler<CreateUserCommand, UserResponse>
+public class CreateUserHandler(AppDbContext db) : ICommandHandler<CreateUserCommand, UserResponse>
 {
     public async Task<UserResponse> HandleAsync(CreateUserCommand command, CancellationToken cancellationToken)
     {
@@ -36,9 +33,6 @@ public class CreateUserHandler(AppDbContext db, IPasswordHasher<User> passwordHa
             Name = command.Name.Trim(),
             Email = email
         };
-
-        if (command.Password is not null)
-            user.PasswordHash = passwordHasher.HashPassword(user, command.Password);
 
         db.Users.Add(user);
 

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PruebaTecnica.Application;
 using PruebaTecnica.Common.Exceptions;
+using PruebaTecnica.Common.Json;
 using PruebaTecnica.Common.Middleware;
 using PruebaTecnica.Common.OpenApi;
 using PruebaTecnica.Endpoints;
@@ -16,6 +17,10 @@ builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
         .AddInterceptors(serviceProvider.GetRequiredService<AuditInterceptor>()));
 
 builder.Services.AddApplication();
+
+var timeZone = TimeZoneInfo.FindSystemTimeZoneById(builder.Configuration["TimeZoneId"] ?? "America/Asuncion");
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new TimeZoneDateTimeConverter(timeZone)));
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

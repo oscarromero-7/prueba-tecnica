@@ -34,13 +34,6 @@ public static class AddressEndpoints
 
         var addresses = app.MapGroup("/addresses").WithTags("Addresses");
 
-        addresses.MapGet("/{id:int}", async (
-                int id,
-                IQueryHandler<GetAddressByIdQuery, AddressResponse> handler,
-                CancellationToken cancellationToken) =>
-            TypedResults.Ok(await handler.HandleAsync(new GetAddressByIdQuery(id), cancellationToken)))
-            .ProducesProblem(StatusCodes.Status404NotFound);
-
         addresses.MapPut("/{id:int}", async (
                 int id,
                 UpdateAddressRequest request,

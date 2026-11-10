@@ -18,13 +18,6 @@ public static class CurrencyEndpoints
                 CancellationToken cancellationToken) =>
             TypedResults.Ok(await handler.HandleAsync(new GetCurrenciesQuery(), cancellationToken)));
 
-        currencies.MapGet("/{code}", async (
-                string code,
-                IQueryHandler<GetCurrencyByCodeQuery, CurrencyResponse> handler,
-                CancellationToken cancellationToken) =>
-            TypedResults.Ok(await handler.HandleAsync(new GetCurrencyByCodeQuery(code), cancellationToken)))
-            .ProducesProblem(StatusCodes.Status404NotFound);
-
         currencies.MapPost("", async (
                 CreateCurrencyCommand command,
                 ICommandHandler<CreateCurrencyCommand, CurrencyResponse> handler,

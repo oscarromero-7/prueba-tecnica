@@ -15,6 +15,12 @@ public static class TestHelpers
         return (await response.Content.ReadFromJsonAsync<UserResponse>())!;
     }
 
+    public static async Task<JsonElement> ReadJsonAsync(this HttpResponseMessage response)
+    {
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        return json.RootElement.Clone();
+    }
+
     public static async Task<string[]> ReadValidationErrorFieldsAsync(this HttpResponseMessage response)
     {
         using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());

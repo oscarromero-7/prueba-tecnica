@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using PruebaTecnica.Application.Users;
 
 namespace PruebaTecnica.Tests;
@@ -9,12 +10,11 @@ public class UserTests(ApiFactory factory) : IClassFixture<ApiFactory>
     private readonly HttpClient _client = factory.CreateAuthorizedClient();
 
     [Fact]
-    public async Task Crear_usuario_devuelve_201_con_location_y_sin_password()
+    public async Task Crear_usuario_con_el_body_del_enunciado_devuelve_201_con_location()
     {
         var email = TestHelpers.NewEmail().ToUpperInvariant();
 
-        var response = await _client.PostAsJsonAsync("/users",
-            new { name = "Juan", email, password = "secreta123" });
+        var response = await _client.PostAsJsonAsync("/users", new { name = "Juan", email });
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var user = await response.Content.ReadFromJsonAsync<UserResponse>();
@@ -153,20 +153,19 @@ public class UserTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
-    public async Task Auditoria_completa_CreatedAt_y_UpdatedAt()
+    public async Task Auditoria_completa_las_fechas_y_las_devuelve_en_hora_de_Paraguay()
     {
-        var createdAt = factory.Time.GetUtcNow().UtcDateTime;
-        var user = await _client.CreateUserAsync();
+        // El reloj falso arranca en 2026-01-01 12:00 UTC, que en Paraguay (UTC-3) son las 09:00.
+        var email = TestHelpers.NewEmail();
+        var created = await (await _client.PostAsJsonAsync("/users", new { name = "Juan", email })).ReadJsonAsync();
 
         factory.Time.Advance(TimeSpan.FromHours(1));
-        var response = await _client.PutAsJsonAsync($"/users/{user.Id}",
-            new { name = "Editado", email = user.Email, isActive = true });
-        var updated = await response.Content.ReadFromJsonAsync<UserResponse>();
+        var updated = await (await _client.PutAsJsonAsync($"/users/{created.GetProperty("id").GetInt32()}",
+            new { name = "Editado", email, isActive = true })).ReadJsonAsync();
 
-        Assert.Equal(createdAt, user.CreatedAt);
-        Assert.Null(user.UpdatedAt);
-        Assert.Equal(createdAt, updated!.CreatedAt);
-        Assert.Equal(createdAt.AddHours(1), updated.UpdatedAt);
-        Assert.Equal(DateTimeKind.Utc, updated.UpdatedAt!.Value.Kind);
+        Assert.Equal("2026-01-01T09:00:00-03:00", created.GetProperty("createdAt").GetString());
+        Assert.Equal(JsonValueKind.Null, created.GetProperty("updatedAt").ValueKind);
+        Assert.Equal("2026-01-01T09:00:00-03:00", updated.GetProperty("createdAt").GetString());
+        Assert.Equal("2026-01-01T10:00:00-03:00", updated.GetProperty("updatedAt").GetString());
     }
 }
