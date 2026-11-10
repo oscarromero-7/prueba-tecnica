@@ -149,7 +149,7 @@ Todos los errores se devuelven como **ProblemDetails** (RFC 9110). Los de valida
 dotnet test tests/PruebaTecnica.Tests
 ```
 
-Son **29 tests de integración**. Cada clase de tests levanta la API en memoria con `WebApplicationFactory`, usando
+Son **40 tests de integración**. Cada clase de tests levanta la API en memoria con `WebApplicationFactory`, usando
 una base SQLite temporal propia (no toca `app.db`) y un `FakeTimeProvider` para controlar las fechas de auditoría.
 Cubren la API Key, los CRUD con sus casos de error (400/404/409), el email único al crear y al editar, el borrado
 en cascada y la fórmula de conversión.

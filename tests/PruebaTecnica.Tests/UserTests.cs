@@ -37,6 +37,40 @@ public class UserTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Contains("Email", fields);
     }
 
+    [Theory]
+    [InlineData("juantest.com")]
+    [InlineData("@test.com")]
+    [InlineData("juan@")]
+    [InlineData("juan@test")]
+    [InlineData("juan perez@test.com")]
+    [InlineData("juan@test..com")]
+    [InlineData("juan@.com")]
+    [InlineData("juan@test.c")]
+    public async Task Email_con_formato_invalido_devuelve_400(string email)
+    {
+        var create = await _client.PostAsJsonAsync("/users", new { name = "Juan", email });
+
+        var user = await _client.CreateUserAsync();
+        var update = await _client.PutAsJsonAsync($"/users/{user.Id}", new { name = "Juan", email, isActive = true });
+
+        Assert.Equal(HttpStatusCode.BadRequest, create.StatusCode);
+        Assert.Equal(["Email"], await create.ReadValidationErrorFieldsAsync());
+        Assert.Equal(HttpStatusCode.BadRequest, update.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("juan@test.com")]
+    [InlineData("juan.perez+tag@mail.empresa.com.py")]
+    [InlineData("  Juan_P@Test.COM  ")]
+    public async Task Email_con_formato_valido_se_acepta(string email)
+    {
+        var unique = $"{Guid.NewGuid():N}{email.Trim()}";
+
+        var response = await _client.PostAsJsonAsync("/users", new { name = "Juan", email = unique });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
     [Fact]
     public async Task Email_duplicado_al_crear_devuelve_409_sin_distinguir_mayusculas()
     {
