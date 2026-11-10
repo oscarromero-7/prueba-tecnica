@@ -14,4 +14,6 @@ public class User : IAuditable
     public DateTime? UpdatedAt { get; set; }
 
     public List<Address> Addresses { get; set; } = [];
+
+    public static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
 }

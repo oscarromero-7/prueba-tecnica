@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using PruebaTecnica.Common.Cqrs;
 using PruebaTecnica.Common.Exceptions;
+using PruebaTecnica.Domain;
 using PruebaTecnica.Infrastructure;
 
 namespace PruebaTecnica.Application.Users.Commands;
@@ -28,7 +29,7 @@ public class UpdateUserHandler(AppDbContext db) : ICommandHandler<UpdateUserComm
         var user = await db.Users.FindAsync([command.Id], cancellationToken)
             ?? throw new NotFoundException($"No existe el usuario con id {command.Id}.");
 
-        var email = command.Email.Trim().ToLowerInvariant();
+        var email = User.NormalizeEmail(command.Email);
 
         if (await db.Users.AnyAsync(u => u.Email == email && u.Id != command.Id, cancellationToken))
             throw new ConflictException($"Ya existe otro usuario con el email '{email}'.");

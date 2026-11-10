@@ -7,7 +7,7 @@ public class ApiKeyMiddleware
 {
     public const string HeaderName = "X-API-KEY";
 
-    private static readonly string[] PublicPaths = ["/swagger", "/openapi"];
+    private static readonly string[] PublicPaths = ["/swagger", "/openapi", "/health"];
 
     private readonly RequestDelegate _next;
     private readonly byte[] _apiKey;

@@ -8,14 +8,19 @@ using PruebaTecnica.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<AppDbContext>(options =>
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<AuditInterceptor>();
+
+builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
     options.UseSqlite(builder.Configuration.GetConnectionString("Default"))
-        .AddInterceptors(new AuditInterceptor()));
+        .AddInterceptors(serviceProvider.GetRequiredService<AuditInterceptor>()));
 
 builder.Services.AddApplication();
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>();
 
 builder.Services.AddOpenApi(options => options.AddDocumentTransformer<ApiKeySecurityTransformer>());
 
@@ -33,6 +38,8 @@ app.UseMiddleware<ApiKeyMiddleware>();
 app.MapUserEndpoints();
 app.MapAddressEndpoints();
 app.MapCurrencyEndpoints();
+
+app.MapHealthChecks("/health");
 
 app.MapOpenApi();
 app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "PruebaTecnica v1"));

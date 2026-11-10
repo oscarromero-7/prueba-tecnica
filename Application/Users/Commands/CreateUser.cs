@@ -25,7 +25,7 @@ public class CreateUserHandler(AppDbContext db, IPasswordHasher<User> passwordHa
 {
     public async Task<UserResponse> HandleAsync(CreateUserCommand command, CancellationToken cancellationToken)
     {
-        var email = command.Email.Trim().ToLowerInvariant();
+        var email = User.NormalizeEmail(command.Email);
 
         if (await db.Users.AnyAsync(u => u.Email == email, cancellationToken))
             throw new ConflictException($"Ya existe un usuario con el email '{email}'.");

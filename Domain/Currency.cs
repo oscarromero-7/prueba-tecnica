@@ -8,4 +8,7 @@ public class Currency : IAuditable
     public decimal RateToBase { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+
+    // "usd" y "USD" son el mismo código: siempre se guarda y se busca en mayúsculas.
+    public static string NormalizeCode(string code) => code.Trim().ToUpperInvariant();
 }

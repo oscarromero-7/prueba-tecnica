@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PruebaTecnica.Common.Cqrs;
 using PruebaTecnica.Common.Exceptions;
+using PruebaTecnica.Domain;
 using PruebaTecnica.Infrastructure;
 
 namespace PruebaTecnica.Application.Currencies.Queries;
@@ -11,7 +12,7 @@ public class GetCurrencyByCodeHandler(AppDbContext db) : IQueryHandler<GetCurren
 {
     public async Task<CurrencyResponse> HandleAsync(GetCurrencyByCodeQuery query, CancellationToken cancellationToken)
     {
-        var code = query.Code.Trim().ToUpperInvariant();
+        var code = Currency.NormalizeCode(query.Code);
 
         return await db.Currencies
             .AsNoTracking()

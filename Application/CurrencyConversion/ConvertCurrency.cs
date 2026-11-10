@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using PruebaTecnica.Common.Cqrs;
 using PruebaTecnica.Common.Exceptions;
+using PruebaTecnica.Domain;
 using PruebaTecnica.Infrastructure;
 
 namespace PruebaTecnica.Application.CurrencyConversion;
@@ -32,8 +33,8 @@ public class ConvertCurrencyHandler(AppDbContext db)
 {
     public async Task<ConvertCurrencyResponse> HandleAsync(ConvertCurrencyQuery query, CancellationToken cancellationToken)
     {
-        var fromCode = query.FromCurrencyCode.Trim().ToUpperInvariant();
-        var toCode = query.ToCurrencyCode.Trim().ToUpperInvariant();
+        var fromCode = Currency.NormalizeCode(query.FromCurrencyCode);
+        var toCode = Currency.NormalizeCode(query.ToCurrencyCode);
 
         var currencies = await db.Currencies
             .AsNoTracking()

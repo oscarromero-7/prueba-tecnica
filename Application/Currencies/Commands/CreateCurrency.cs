@@ -25,8 +25,7 @@ public class CreateCurrencyHandler(AppDbContext db) : ICommandHandler<CreateCurr
 {
     public async Task<CurrencyResponse> HandleAsync(CreateCurrencyCommand command, CancellationToken cancellationToken)
     {
-        // Se guarda en mayúsculas: "usd" y "USD" son el mismo código.
-        var code = command.Code.Trim().ToUpperInvariant();
+        var code = Currency.NormalizeCode(command.Code);
 
         if (await db.Currencies.AnyAsync(c => c.Code == code, cancellationToken))
             throw new ConflictException($"Ya existe la moneda '{code}'.");

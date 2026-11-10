@@ -4,7 +4,7 @@ using PruebaTecnica.Domain;
 
 namespace PruebaTecnica.Infrastructure;
 
-public class AuditInterceptor : SaveChangesInterceptor
+public class AuditInterceptor(TimeProvider timeProvider) : SaveChangesInterceptor
 {
     public override InterceptionResult<int> SavingChanges(
         DbContextEventData eventData, InterceptionResult<int> result)
@@ -20,11 +20,11 @@ public class AuditInterceptor : SaveChangesInterceptor
         return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
-    private static void ApplyAudit(DbContext? context)
+    private void ApplyAudit(DbContext? context)
     {
         if (context is null) return;
 
-        var now = DateTime.UtcNow;
+        var now = timeProvider.GetUtcNow().UtcDateTime;
 
         foreach (var entry in context.ChangeTracker.Entries<IAuditable>())
         {
