@@ -1,5 +1,8 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
+using PruebaTecnica.Application.Addresses;
+using PruebaTecnica.Application.Addresses.Commands;
+using PruebaTecnica.Application.Addresses.Queries;
 using PruebaTecnica.Application.Users;
 using PruebaTecnica.Application.Users.Commands;
 using PruebaTecnica.Application.Users.Queries;
@@ -20,6 +23,12 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<DeleteUserCommand>, DeleteUserHandler>();
         services.AddScoped<IQueryHandler<GetUsersQuery, List<UserResponse>>, GetUsersHandler>();
         services.AddScoped<IQueryHandler<GetUserByIdQuery, UserResponse>, GetUserByIdHandler>();
+
+        services.AddScoped<ICommandHandler<CreateAddressCommand, AddressResponse>, CreateAddressHandler>();
+        services.AddScoped<ICommandHandler<UpdateAddressCommand, AddressResponse>, UpdateAddressHandler>();
+        services.AddScoped<ICommandHandler<DeleteAddressCommand>, DeleteAddressHandler>();
+        services.AddScoped<IQueryHandler<GetAddressesByUserQuery, List<AddressResponse>>, GetAddressesByUserHandler>();
+        services.AddScoped<IQueryHandler<GetAddressByIdQuery, AddressResponse>, GetAddressByIdHandler>();
 
         return services;
     }

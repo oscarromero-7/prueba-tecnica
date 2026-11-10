@@ -31,6 +31,7 @@ app.UseExceptionHandler();
 app.UseMiddleware<ApiKeyMiddleware>();
 
 app.MapUserEndpoints();
+app.MapAddressEndpoints();
 
 app.MapOpenApi();
 app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "PruebaTecnica v1"));
