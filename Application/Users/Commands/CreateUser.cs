@@ -8,7 +8,8 @@ using PruebaTecnica.Infrastructure;
 
 namespace PruebaTecnica.Application.Users.Commands;
 
-public record CreateUserCommand(string Name, string Email, string? Password);
+// "= null" marca Password como opcional también en el documento OpenAPI.
+public record CreateUserCommand(string Name, string Email, string? Password = null);
 
 public class CreateUserValidator : AbstractValidator<CreateUserCommand>
 {

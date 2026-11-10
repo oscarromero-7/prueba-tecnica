@@ -7,7 +7,7 @@ using PruebaTecnica.Infrastructure;
 
 namespace PruebaTecnica.Application.Addresses.Commands;
 
-public record CreateAddressRequest(string Street, string City, string Country, string? ZipCode);
+public record CreateAddressRequest(string Street, string City, string Country, string? ZipCode = null);
 
 public record CreateAddressCommand(int UserId, string Street, string City, string Country, string? ZipCode);
 
