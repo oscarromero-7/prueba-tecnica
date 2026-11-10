@@ -32,6 +32,7 @@ app.UseMiddleware<ApiKeyMiddleware>();
 
 app.MapUserEndpoints();
 app.MapAddressEndpoints();
+app.MapCurrencyEndpoints();
 
 app.MapOpenApi();
 app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "PruebaTecnica v1"));

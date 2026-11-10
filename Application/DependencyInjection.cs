@@ -3,6 +3,10 @@ using Microsoft.AspNetCore.Identity;
 using PruebaTecnica.Application.Addresses;
 using PruebaTecnica.Application.Addresses.Commands;
 using PruebaTecnica.Application.Addresses.Queries;
+using PruebaTecnica.Application.Currencies;
+using PruebaTecnica.Application.Currencies.Commands;
+using PruebaTecnica.Application.Currencies.Queries;
+using PruebaTecnica.Application.CurrencyConversion;
 using PruebaTecnica.Application.Users;
 using PruebaTecnica.Application.Users.Commands;
 using PruebaTecnica.Application.Users.Queries;
@@ -29,6 +33,11 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<DeleteAddressCommand>, DeleteAddressHandler>();
         services.AddScoped<IQueryHandler<GetAddressesByUserQuery, List<AddressResponse>>, GetAddressesByUserHandler>();
         services.AddScoped<IQueryHandler<GetAddressByIdQuery, AddressResponse>, GetAddressByIdHandler>();
+
+        services.AddScoped<ICommandHandler<CreateCurrencyCommand, CurrencyResponse>, CreateCurrencyHandler>();
+        services.AddScoped<IQueryHandler<GetCurrenciesQuery, List<CurrencyResponse>>, GetCurrenciesHandler>();
+        services.AddScoped<IQueryHandler<GetCurrencyByCodeQuery, CurrencyResponse>, GetCurrencyByCodeHandler>();
+        services.AddScoped<IQueryHandler<ConvertCurrencyQuery, ConvertCurrencyResponse>, ConvertCurrencyHandler>();
 
         return services;
     }
