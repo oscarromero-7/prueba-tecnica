@@ -1,6 +1,6 @@
 namespace PruebaTecnica.Domain;
 
-public class User
+public class User : IAuditable
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -10,7 +10,8 @@ public class User
     public bool IsActive { get; set; } = true;
 
     public string? PasswordHash { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 
     public List<Address> Addresses { get; set; } = [];
 }

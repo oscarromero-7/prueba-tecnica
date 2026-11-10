@@ -4,7 +4,8 @@ using PruebaTecnica.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("Default")));
+    options.UseSqlite(builder.Configuration.GetConnectionString("Default"))
+        .AddInterceptors(new AuditInterceptor()));
 
 builder.Services.AddOpenApi();
 

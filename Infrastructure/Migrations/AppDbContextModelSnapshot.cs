@@ -33,9 +33,15 @@ namespace PruebaTecnica.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Street")
                         .IsRequired()
                         .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("UserId")
@@ -63,6 +69,9 @@ namespace PruebaTecnica.Infrastructure.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -70,6 +79,9 @@ namespace PruebaTecnica.Infrastructure.Migrations
 
                     b.Property<decimal>("RateToBase")
                         .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -84,6 +96,7 @@ namespace PruebaTecnica.Infrastructure.Migrations
                         {
                             Id = 1,
                             Code = "PYG",
+                            CreatedAt = new DateTime(2026, 11, 10, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Guaraní paraguayo",
                             RateToBase = 1m
                         },
@@ -91,6 +104,7 @@ namespace PruebaTecnica.Infrastructure.Migrations
                         {
                             Id = 2,
                             Code = "USD",
+                            CreatedAt = new DateTime(2026, 11, 10, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Dólar estadounidense",
                             RateToBase = 7300m
                         },
@@ -98,6 +112,7 @@ namespace PruebaTecnica.Infrastructure.Migrations
                         {
                             Id = 3,
                             Code = "EUR",
+                            CreatedAt = new DateTime(2026, 11, 10, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Euro",
                             RateToBase = 7900m
                         },
@@ -105,6 +120,7 @@ namespace PruebaTecnica.Infrastructure.Migrations
                         {
                             Id = 4,
                             Code = "BRL",
+                            CreatedAt = new DateTime(2026, 11, 10, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Real brasileño",
                             RateToBase = 1300m
                         });
@@ -134,6 +150,9 @@ namespace PruebaTecnica.Infrastructure.Migrations
 
                     b.Property<string>("PasswordHash")
                         .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

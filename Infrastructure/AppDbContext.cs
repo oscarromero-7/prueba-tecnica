@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PruebaTecnica.Domain;
 
 namespace PruebaTecnica.Infrastructure;
@@ -47,11 +48,27 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             // RateToBase en SQL; los cálculos se hacen en C#.
             currency.Property(c => c.RateToBase).IsRequired().HasPrecision(18, 6);
 
+            // HasData no pasa por el interceptor y necesita valores fijos (no DateTime.UtcNow).
+            var seedDate = new DateTime(2026, 11, 10, 0, 0, 0, DateTimeKind.Utc);
             currency.HasData(
-                new Currency { Id = 1, Code = "PYG", Name = "Guaraní paraguayo", RateToBase = 1m },
-                new Currency { Id = 2, Code = "USD", Name = "Dólar estadounidense", RateToBase = 7300m },
-                new Currency { Id = 3, Code = "EUR", Name = "Euro", RateToBase = 7900m },
-                new Currency { Id = 4, Code = "BRL", Name = "Real brasileño", RateToBase = 1300m });
+                new Currency { Id = 1, Code = "PYG", Name = "Guaraní paraguayo", RateToBase = 1m, CreatedAt = seedDate },
+                new Currency { Id = 2, Code = "USD", Name = "Dólar estadounidense", RateToBase = 7300m, CreatedAt = seedDate },
+                new Currency { Id = 3, Code = "EUR", Name = "Euro", RateToBase = 7900m, CreatedAt = seedDate },
+                new Currency { Id = 4, Code = "BRL", Name = "Real brasileño", RateToBase = 1300m, CreatedAt = seedDate });
         });
+
+        // SQLite guarda DateTime como TEXT y al leerlo pierde el Kind; lo marcamos como UTC.
+        var utcConverter = new ValueConverter<DateTime, DateTime>(
+            v => v,
+            v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+
+        var dateTimeProperties = modelBuilder.Model.GetEntityTypes()
+            .SelectMany(t => t.GetProperties())
+            .Where(p => p.ClrType == typeof(DateTime) || p.ClrType == typeof(DateTime?));
+
+        foreach (var property in dateTimeProperties)
+        {
+            property.SetValueConverter(utcConverter);
+        }
     }
 }
